@@ -1,1291 +1,424 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración de Condominios y Fraccionamientos</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            800: '#0c4a6e',
-                            900: '#0f172a'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Estilos personalizados adicionales */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CondoAdmin - Acceso por Departamento</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 antialiased flex h-screen overflow-hidden">
+<body class="bg-slate-100 text-slate-800 font-sans">
 
-    <!-- Overlay móvil para cerrar sidebar -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden transition-opacity"></div>
+  <!-- PANTALLA DE LOGIN -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-slate-200">
+      <div class="text-center mb-8">
+        <div class="bg-indigo-600 text-white w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-md">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900">Portal Residencial</h1>
+        <p class="text-slate-500 text-sm mt-1">Ingresa las credenciales de tu departamento</p>
+      </div>
 
-    <!-- SIDEBAR DE NAVEGACIÓN -->
-    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-300 flex flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl">
-        <!-- Logo y Header Sidebar -->
-        <div class="h-16 px-6 flex items-center justify-between border-b border-slate-800">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 bg-gradient-to-tr from-brand-500 to-emerald-400 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
-                    V
-                </div>
-                <div>
-                    <span class="text-lg font-bold text-white tracking-wide">Santa Catarina 3ra sección</span>
-                    <span class="text-xs block text-slate-400 -mt-1">Condominios</span>
-                </div>
-            </div>
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-xl"></i>
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Correo del Departamento</label>
+          <input type="email" id="login-email" required placeholder="depto101@condominio.com"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
+          <input type="password" id="login-password" required placeholder="••••••••"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div id="login-error" class="hidden text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+          Credenciales incorrectas. Verifica tu correo y contraseña.
+        </div>
+        <button type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm">
+          Iniciar Sesión
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL (OCULTA HASTA INICIAR SESIÓN) -->
+  <div id="app-screen" class="hidden min-h-screen flex flex-col md:flex-row">
+    
+    <!-- Sidebar -->
+    <aside class="bg-slate-900 text-white w-full md:w-64 flex-shrink-0 flex flex-col justify-between">
+      <div>
+        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+          <i class="fa-solid fa-building text-indigo-400 text-xl"></i>
+          <div>
+            <h2 class="font-bold text-lg leading-tight">CondoAdmin</h2>
+            <span id="user-unit-badge" class="text-xs bg-indigo-600 px-2 py-0.5 rounded text-white font-medium">Cargando...</span>
+          </div>
+        </div>
+
+        <nav class="p-4 space-y-2">
+          <button onclick="showSection('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-left text-sm font-medium">
+            <i class="fa-solid fa-chart-pie w-5"></i> Mi Resumen
+          </button>
+          <button onclick="showSection('payments')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 text-left text-sm font-medium">
+            <i class="fa-solid fa-receipt w-5"></i> Estado de Cuenta
+          </button>
+          <button onclick="showSection('incidents')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 text-left text-sm font-medium">
+            <i class="fa-solid fa-screwdriver-wrench w-5"></i> Reportes e Incidencias
+          </button>
+          <button onclick="showSection('announcements')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 text-left text-sm font-medium">
+            <i class="fa-solid fa-bullhorn w-5"></i> Avisos Generales
+          </button>
+
+          <!-- Opciones exclusivas para Administrador -->
+          <div id="admin-menu" class="hidden pt-4 mt-4 border-t border-slate-800">
+            <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Administración</p>
+            <button onclick="showSection('admin-units')" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 text-left text-sm font-medium">
+              <i class="fa-solid fa-users w-5"></i> Control de Deptos
             </button>
-        </div>
-
-        <!-- Info Condominio Actual -->
-        <div class="p-4 mx-3 my-3 bg-slate-800/60 rounded-xl border border-slate-700/50 flex items-center justify-between">
-            <div class="truncate">
-                <p class="text-xs text-slate-400 font-medium uppercase">Condominio</p>
-                <p class="text-sm font-semibold text-white truncate" id="current-condo-name">Residencial Las Palmas</p>
-            </div>
-            <i class="fa-solid fa-building-user text-brand-500"></i>
-        </div>
-
-        <!-- Menú de Navegación -->
-        <nav class="flex-1 px-3 py-2 space-y-1 overflow-y-auto custom-scrollbar">
-            <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item active flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-white bg-brand-600 transition-colors">
-                <i class="fa-solid fa-chart-pie w-6 text-base"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="#" onclick="switchTab('residentes')" id="nav-residentes" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-house-user w-6 text-base"></i>
-                <span>Residentes y Casas</span>
-            </a>
-            <a href="#" onclick="switchTab('finanzas')" id="nav-finanzas" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-wallet w-6 text-base"></i>
-                <span>Finanzas y Recibos</span>
-            </a>
-            <a href="#" onclick="switchTab('comunicados')" id="nav-comunicados" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-bullhorn w-6 text-base"></i>
-                <span>Avisos y Comunicados</span>
-            </a>
-            <a href="#" onclick="switchTab('incidencias')" id="nav-incidencias" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-triangle-exclamation w-6 text-base"></i>
-                <span>Incidencias / Manto.</span>
-            </a>
-            <a href="#" onclick="switchTab('reservas')" id="nav-reservas" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-calendar-check w-6 text-base"></i>
-                <span>Amenidades y Reservas</span>
-            </a>
+          </div>
         </nav>
+      </div>
 
-        <!-- Footer / Usuario -->
-        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center font-bold text-slate-200">
-                    AD
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-white leading-tight">Admin Principal</p>
-                    <p class="text-xs text-slate-400">admin@vivook.com</p>
-                </div>
-            </div>
-            <button title="Cerrar sesión" class="text-slate-400 hover:text-red-400 transition-colors">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            </button>
+      <div class="p-4 border-t border-slate-800">
+        <div class="mb-3 px-2">
+          <p id="user-name-display" class="text-sm font-medium text-white truncate">Usuario</p>
+          <p id="user-role-display" class="text-xs text-slate-400 capitalize">Rol</p>
         </div>
+        <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white py-2 rounded-lg text-sm transition">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+        </button>
+      </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL DE CONTENIDO -->
-    <div class="flex-1 flex flex-col h-screen overflow-hidden">
-
-        <!-- HEADER SUPERIOR -->
-        <header class="h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between shadow-sm z-10">
-            <div class="flex items-center space-x-3">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
-                    <i class="fa-solid fa-bars text-xl"></i>
-                </button>
-                <h1 id="page-title" class="text-xl font-bold text-slate-800">Dashboard General</h1>
-            </div>
-
-            <!-- Acciones Rápidas del Header -->
-            <div class="flex items-center space-x-3">
-                <button onclick="openModal('modal-pago')" class="hidden sm:inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow transition">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Registrar Pago</span>
-                </button>
-                <button onclick="openModal('modal-incidencia')" class="inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow transition">
-                    <i class="fa-solid fa-headset"></i>
-                    <span>Nueva Incidencia</span>
-                </button>
-                <div class="h-6 w-px bg-slate-200 mx-1"></div>
-                <button class="relative p-2 text-slate-500 hover:text-brand-600 rounded-full hover:bg-slate-100 transition">
-                    <i class="fa-regular fa-bell text-lg"></i>
-                    <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"></span>
-                </button>
-            </div>
+    <!-- Contenido Principal -->
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+      
+      <!-- SECCIÓN: RESUMEN -->
+      <section id="sec-dashboard" class="app-section space-y-6">
+        <header>
+          <h1 class="text-2xl font-bold text-slate-900" id="welcome-title">Bienvenido</h1>
+          <p class="text-slate-500 text-sm">Información actualizada de tu unidad y comunidad</p>
         </header>
 
-        <!-- CONTENIDO CAMBIANTE SEGÚN LA PESTAÑA -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 custom-scrollbar">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <p class="text-sm text-slate-500 font-medium" id="kpi-1-label">Saldo Pendiente</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2" id="kpi-1-value">$0.00</p>
+            <span id="kpi-1-status" class="inline-block mt-2 text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">Al corriente</span>
+          </div>
 
-            <!-- Dynamic Toast Notification Container -->
-            <div id="toast-container" class="fixed top-20 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <p class="text-sm text-slate-500 font-medium">Reportes Activos</p>
+            <p class="text-3xl font-bold text-slate-900 mt-2" id="kpi-incidents-count">0</p>
+            <span class="inline-block mt-2 text-xs text-slate-500">En seguimiento por administración</span>
+          </div>
 
-            <!-- TAB 1: DASHBOARD -->
-            <div id="tab-dashboard" class="tab-content space-y-6">
-                <!-- RESUMEN EJECUTIVO (KPI CARDS) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <!-- KPI 1 -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ingresos Mes (Manto.)</p>
-                            <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-ingresos">$148,500 MXN</h3>
-                            <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center">
-                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> +8.2% vs mes anterior
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                            <i class="fa-solid fa-sack-dollar text-2xl"></i>
-                        </div>
-                    </div>
-                    <!-- KPI 2 -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Porcentaje Morosidad</p>
-                            <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-morosidad">12.5%</h3>
-                            <p class="text-xs text-red-500 font-medium mt-1 flex items-center">
-                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> 6 de 48 casas con adeudo
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-500">
-                            <i class="fa-solid fa-user-xmark text-2xl"></i>
-                        </div>
-                    </div>
-                    <!-- KPI 3 -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fondo de Reserva</p>
-                            <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-banco">$320,400 MXN</h3>
-                            <p class="text-xs text-brand-600 font-medium mt-1">Cuenta Santander ****4921</p>
-                        </div>
-                        <div class="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
-                            <i class="fa-solid fa-building-columns text-2xl"></i>
-                        </div>
-                    </div>
-                    <!-- KPI 4 -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Incidentes Pendientes</p>
-                            <h3 class="text-2xl font-bold text-slate-800 mt-1" id="kpi-incidencias">3 Abiertos</h3>
-                            <p class="text-xs text-amber-600 font-medium mt-1">1 Prioridad Alta</p>
-                        </div>
-                        <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-                            <i class="fa-solid fa-screwdriver-wrench text-2xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GRÁFICO Y ACTIVIDAD RECIENTE -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Gráfico Balance Financiero -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h2 class="text-lg font-bold text-slate-800">Balance Financiero Semestral</h2>
-                                <p class="text-xs text-slate-500">Ingresos acumulados vs Egresos de mantenimiento</p>
-                            </div>
-                            <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">Año 2026</span>
-                        </div>
-                        <div class="h-64 relative">
-                            <canvas id="financeChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Avisos Destacados en Dashboard -->
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-bold text-slate-800">Avisos Recientes</h2>
-                            <button onclick="switchTab('comunicados')" class="text-xs text-brand-600 font-semibold hover:underline">Ver todos</button>
-                        </div>
-                        <div class="space-y-3 flex-1 overflow-y-auto max-h-64 custom-scrollbar pr-1" id="dash-avisos-list">
-                            <!-- Inyectado dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TABLA DE PAGOS RECIENTES EN DASHBOARD -->
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-                        <h2 class="text-lg font-bold text-slate-800">Últimos Pagos Registrados</h2>
-                        <button onclick="switchTab('finanzas')" class="text-xs text-brand-600 font-semibold hover:underline">Ir a Finanzas</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-xs text-slate-400 uppercase font-semibold">
-                                <tr>
-                                    <th class="px-6 py-3">Folio</th>
-                                    <th class="px-6 py-3">Propiedad</th>
-                                    <th class="px-6 py-3">Residente</th>
-                                    <th class="px-6 py-3">Monto</th>
-                                    <th class="px-6 py-3">Método</th>
-                                    <th class="px-6 py-3">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100" id="dash-recent-payments">
-                                <!-- JS Populates -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: RESIDENTES / PROPIEDADES -->
-            <div id="tab-residentes" class="tab-content hidden space-y-6">
-                <!-- Filtros y Búsqueda -->
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="relative flex-1">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="search-residentes" onkeyup="filterResidentes()" placeholder="Buscar por casa, residente o teléfono..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <select id="filter-estado-pago" onchange="filterResidentes()" class="bg-slate-50 border border-slate-200 rounded-xl text-sm px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                            <option value="todos">Todos los Estados</option>
-                            <option value="Al Día">Al Día</option>
-                            <option value="Moroso">Moroso</option>
-                        </select>
-                        <button onclick="openModal('modal-residente')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center space-x-2">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>Agregar Casa</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Tabla de Residentes -->
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-xs text-slate-400 uppercase font-semibold border-b border-slate-100">
-                                <tr>
-                                    <th class="px-6 py-4">Casa / Depto</th>
-                                    <th class="px-6 py-4">Propietario / Residente</th>
-                                    <th class="px-6 py-4">Contacto</th>
-                                    <th class="px-6 py-4">Cuota Mensual</th>
-                                    <th class="px-6 py-4">Estatus Pago</th>
-                                    <th class="px-6 py-4 text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100" id="residentes-table-body">
-                                <!-- Inyectado dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: CUOTAS Y FINANZAS -->
-            <div id="tab-finanzas" class="tab-content hidden space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800">Control Financiero de Mantenimiento</h2>
-                        <p class="text-xs text-slate-500">Historial completo de pagos recibidos e ingresos generados</p>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <button onclick="openModal('modal-pago')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center space-x-2">
-                            <i class="fa-solid fa-receipt"></i>
-                            <span>Registrar Nuevo Pago</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Historial de Pagos -->
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                        <span class="font-bold text-slate-800 text-sm">Historial de Transacciones</span>
-                        <input type="text" id="search-finanzas" onkeyup="filterFinanzas()" placeholder="Buscar folio o casa..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-xs text-slate-400 uppercase font-semibold">
-                                <tr>
-                                    <th class="px-6 py-3">Folio</th>
-                                    <th class="px-6 py-3">Fecha</th>
-                                    <th class="px-6 py-3">Casa</th>
-                                    <th class="px-6 py-3">Concepto</th>
-                                    <th class="px-6 py-3">Monto</th>
-                                    <th class="px-6 py-3">Método</th>
-                                    <th class="px-6 py-3 text-center">Recibo</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100" id="finanzas-table-body">
-                                <!-- Inyectado dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: COMUNICADOS Y AVISOS -->
-            <div id="tab-comunicados" class="tab-content hidden space-y-6">
-                <div class="flex items-center justify-between bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800">Avisos y Comunicados Oficiales</h2>
-                        <p class="text-xs text-slate-500">Publicaciones e información general para la comunidad</p>
-                    </div>
-                    <button onclick="openModal('modal-aviso')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center space-x-2">
-                        <i class="fa-solid fa-bullhorn"></i>
-                        <span>Publicar Nuevo Aviso</span>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="comunicados-grid">
-                    <!-- Inyectado dinámicamente -->
-                </div>
-            </div>
-
-            <!-- TAB 5: INCIDENCIAS / MANTENIMIENTO -->
-            <div id="tab-incidencias" class="tab-content hidden space-y-6">
-                <div class="flex items-center justify-between bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800">Mantenimiento y Reporte de Fallas</h2>
-                        <p class="text-xs text-slate-500">Atención a problemas reportados en las áreas comunes o accesos</p>
-                    </div>
-                    <button onclick="openModal('modal-incidencia')" class="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center space-x-2">
-                        <i class="fa-solid fa-plus"></i>
-                        <span>Reportar Incidencia</span>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="incidencias-cards-container">
-                    <!-- Inyectado dinámicamente -->
-                </div>
-            </div>
-
-            <!-- TAB 6: RESERVA DE ÁREAS COMUNES -->
-            <div id="tab-reservas" class="tab-content hidden space-y-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800">Reservación de Amenidades</h2>
-                        <p class="text-xs text-slate-500">Aparta la Palapa, Salón de Eventos o Cancha deportiva</p>
-                    </div>
-                    <button onclick="openModal('modal-reserva')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center space-x-2">
-                        <i class="fa-regular fa-calendar-plus"></i>
-                        <span>Nueva Reservación</span>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Tarjetas de Amenidades Disponibles -->
-                    <div class="space-y-4">
-                        <h3 class="font-bold text-slate-700 text-sm">Nuestras Amenidades</h3>
-                        
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                            <div class="w-16 h-16 bg-blue-100 text-brand-600 rounded-xl flex items-center justify-center text-2xl font-bold">
-                                <i class="fa-solid fa-champagne-glasses"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-slate-800 text-sm">Salón de Eventos</h4>
-                                <p class="text-xs text-slate-500">Capacidad: 80 personas</p>
-                                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full mt-1 inline-block">Cuota: $500 MXN</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl font-bold">
-                                <i class="fa-solid fa-umbrella-beach"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-slate-800 text-sm">Palapa con Asador</h4>
-                                <p class="text-xs text-slate-500">Capacidad: 30 personas</p>
-                                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full mt-1 inline-block">Sin costo extra</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl font-bold">
-                                <i class="fa-solid fa-futbol"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-slate-800 text-sm">Cancha Futbol 7</h4>
-                                <p class="text-xs text-slate-500">Uso nocturno con iluminación</p>
-                                <span class="text-[10px] bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full mt-1 inline-block">Sin costo extra</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Lista de Reservas Confirmadas -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <h3 class="font-bold text-slate-800 text-base mb-4">Próximas Eventos / Reservaciones</h3>
-                        <div class="space-y-3" id="reservas-list-container">
-                            <!-- Inyectado dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- MODALES / FORMULARIOS POPUP -->
-
-    <!-- Modal Registrar Pago -->
-    <div id="modal-pago" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-receipt text-emerald-400"></i>
-                    <span>Registrar Pago de Cuota</span>
-                </h3>
-                <button onclick="closeModal('modal-pago')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="handleSavePago(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Seleccionar Casa</label>
-                    <select id="pago-casa" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <!-- Populated dynamic -->
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Concepto</label>
-                    <input type="text" id="pago-concepto" required value="Mantenimiento Mensual" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Monto ($ MXN)</label>
-                        <input type="number" id="pago-monto" required value="2500" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Método de Pago</label>
-                        <select id="pago-metodo" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                            <option value="Transferencia SPEI">Transferencia SPEI</option>
-                            <option value="Tarjeta Crédito/Débito">Tarjeta Débito/Crédito</option>
-                            <option value="Efectivo / Depósito">Efectivo</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="pt-2 flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('modal-pago')" class="px-4 py-2 rounded-xl text-slate-600 text-sm hover:bg-slate-100 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow">Generar Recibo</button>
-                </div>
-            </form>
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <p class="text-sm text-slate-500 font-medium">Próxima Cuota</p>
+            <p class="text-3xl font-bold text-indigo-600 mt-2">$1,500.00</p>
+            <span class="inline-block mt-2 text-xs text-slate-500">Vence el día 10 de cada mes</span>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <!-- Modal Reportar Incidencia -->
-    <div id="modal-incidencia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
-                    <span>Nueva Incidencia / Fallo</span>
-                </h3>
-                <button onclick="closeModal('modal-incidencia')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="handleSaveIncidencia(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Título de la falla</label>
-                    <input type="text" id="inc-titulo" placeholder="Ej. Fuga de agua en área de alberca" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Ubicación / Área</label>
-                    <input type="text" id="inc-ubicacion" placeholder="Ej. Portón Principal / Jardín Central" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Prioridad</label>
-                    <select id="inc-prioridad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="Alta">Alta (Urgente)</option>
-                        <option value="Media" selected>Media</option>
-                        <option value="Baja">Baja</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Descripción breve</label>
-                    <textarea id="inc-desc" rows="3" placeholder="Detalla el problema observado..." required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
-                </div>
-                <div class="pt-2 flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('modal-incidencia')" class="px-4 py-2 rounded-xl text-slate-600 text-sm hover:bg-slate-100 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold shadow">Enviar Reporte</button>
-                </div>
-            </form>
+      <!-- SECCIÓN: ESTADO DE CUENTA -->
+      <section id="sec-payments" class="app-section hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Historial de Pagos</h1>
+            <p class="text-slate-500 text-sm" id="payments-subtitle">Movimientos registrados para tu departamento</p>
+          </div>
+          <button id="btn-new-payment" onclick="openPaymentModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
+            <i class="fa-solid fa-plus mr-2"></i>Registrar Pago
+          </button>
         </div>
-    </div>
 
-    <!-- Modal Publicar Aviso -->
-    <div id="modal-aviso" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-bullhorn text-brand-400"></i>
-                    <span>Crear Comunicado</span>
-                </h3>
-                <button onclick="closeModal('modal-aviso')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="handleSaveAviso(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Título del Aviso</label>
-                    <input type="text" id="aviso-titulo" placeholder="Ej. Mantenimiento del Sistema Eléctrico" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Categoría</label>
-                    <select id="aviso-categoria" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="Asamblea">Asamblea de Vecinos</option>
-                        <option value="Mantenimiento">Mantenimiento Programado</option>
-                        <option value="Reglamento">Reglamento / Seguridad</option>
-                        <option value="General">Aviso General</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Mensaje para los Vecinos</label>
-                    <textarea id="aviso-contenido" rows="3" placeholder="Escribe el contenido del mensaje..." required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
-                </div>
-                <div class="pt-2 flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('modal-aviso')" class="px-4 py-2 rounded-xl text-slate-600 text-sm hover:bg-slate-100 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow">Publicar Aviso</button>
-                </div>
-            </form>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
+              <tr>
+                <th class="p-4">Fecha</th>
+                <th class="p-4">Departamento</th>
+                <th class="p-4">Concepto</th>
+                <th class="p-4">Monto</th>
+                <th class="p-4">Estatus</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table-body" class="divide-y divide-slate-200 text-sm">
+              <!-- Filas dinámicas desde Firestore -->
+            </tbody>
+          </table>
         </div>
-    </div>
+      </section>
 
-    <!-- Modal Reservar Amenidad -->
-    <div id="modal-reserva" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center space-x-2">
-                    <i class="fa-regular fa-calendar-check text-emerald-400"></i>
-                    <span>Reservar Áreas Comunes</span>
-                </h3>
-                <button onclick="closeModal('modal-reserva')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="handleSaveReserva(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Amenidad</label>
-                    <select id="reserva-amenidad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="Salón de Eventos">Salón de Eventos</option>
-                        <option value="Palapa con Asador">Palapa con Asador</option>
-                        <option value="Cancha Futbol 7">Cancha Futbol 7</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Casa / Solicitante</label>
-                    <select id="reserva-casa" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <!-- Dynamic -->
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Fecha</label>
-                        <input type="date" id="reserva-fecha" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Horario</label>
-                        <select id="reserva-horario" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                            <option value="10:00 - 15:00">10:00 - 15:00 hrs</option>
-                            <option value="16:00 - 22:00">16:00 - 22:00 hrs</option>
-                            <option value="Todo el día">Día Completo</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="pt-2 flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('modal-reserva')" class="px-4 py-2 rounded-xl text-slate-600 text-sm hover:bg-slate-100 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow">Confirmar Reserva</button>
-                </div>
-            </form>
+      <!-- SECCIÓN: INCIDENCIAS -->
+      <section id="sec-incidents" class="app-section hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Reportes e Incidencias</h1>
+            <p class="text-slate-500 text-sm">Solicitudes de mantenimiento y atención</p>
+          </div>
         </div>
-    </div>
 
-    <!-- Modal Agregar Residente / Casa -->
-    <div id="modal-residente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center space-x-2">
-                    <i class="fa-solid fa-house-user text-brand-400"></i>
-                    <span>Agregar Nueva Propiedad</span>
-                </h3>
-                <button onclick="closeModal('modal-residente')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="handleSaveResidente(event)" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Casa / Num.</label>
-                        <input type="text" id="res-casa" placeholder="Ej. Casa 49" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cuota ($)</label>
-                        <input type="number" id="res-cuota" value="2500" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre Propietario</label>
-                    <input type="text" id="res-nombre" placeholder="Ej. Roberto García" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Teléfono</label>
-                    <input type="tel" id="res-telefono" placeholder="Ej. 55 1234 5678" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Estado Incial</label>
-                    <select id="res-estado" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="Al Día">Al Día</option>
-                        <option value="Moroso">Moroso</option>
-                    </select>
-                </div>
-                <div class="pt-2 flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('modal-residente')" class="px-4 py-2 rounded-xl text-slate-600 text-sm hover:bg-slate-100 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow">Guardar Registro</button>
-                </div>
-            </form>
+        <!-- Formulario para crear reporte -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h3 class="font-semibold text-slate-800 mb-4">Levantar nuevo reporte</h3>
+          <form id="incident-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" id="inc-title" required placeholder="Título (Ej. Fuga en pasillo)" class="px-4 py-2 rounded-lg border border-slate-300 text-sm">
+            <select id="inc-category" class="px-4 py-2 rounded-lg border border-slate-300 text-sm">
+              <option value="Mantenimiento">Mantenimiento General</option>
+              <option value="Plomería">Plomería / Agua</option>
+              <option value="Electricidad">Electricidad / Iluminación</option>
+              <option value="Seguridad">Seguridad / Accesos</option>
+            </select>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              Enviar Reporte
+            </button>
+          </form>
         </div>
-    </div>
 
-    <!-- Modal Recibo Simple de Muestreo -->
-    <div id="modal-recibo-view" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 border border-slate-100">
-            <div class="text-center border-b border-slate-100 pb-4">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold">
-                    <i class="fa-solid fa-check"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">Recibo de Mantenimiento</h3>
-                <p class="text-xs text-slate-400">Sanata Catarina 3ra sección Condominios - Las Palmas</p>
-            </div>
-            <div class="py-4 space-y-3 text-xs" id="recibo-details">
-                <!-- Inyectado por JS -->
-            </div>
-            <div class="pt-4 border-t border-slate-100 flex space-x-2">
-                <button onclick="closeModal('modal-recibo-view')" class="flex-1 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium text-xs hover:bg-slate-200">Cerrar</button>
-                <button onclick="showToast('Imprimiendo o descargando recibo...', 'success')" class="flex-1 py-2 bg-brand-600 text-white rounded-xl font-medium text-xs hover:bg-brand-700 flex items-center justify-center space-x-1">
-                    <i class="fa-solid fa-download"></i>
-                    <span>Descargar PDF</span>
-                </button>
-            </div>
+        <div id="incidents-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tarjetas dinámicas de incidencias -->
         </div>
+      </section>
+
+      <!-- SECCIÓN: AVISOS -->
+      <section id="sec-announcements" class="app-section hidden space-y-6">
+        <h1 class="text-2xl font-bold text-slate-900">Avisos de la Comunidad</h1>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded">Comunicado Oficial</span>
+          <h3 class="font-bold text-lg text-slate-900 mt-2">Mantenimiento preventivo de cisterna</h3>
+          <p class="text-slate-600 text-sm mt-1">Se les informa a todos los residentes que este sábado de 9:00 AM a 1:00 PM se realizará limpieza general de cisternas.</p>
+        </div>
+      </section>
+
+      <!-- SECCIÓN ADMIN: CONTROL DE DEPARTAMENTOS -->
+      <section id="sec-admin-units" class="app-section hidden space-y-6">
+        <h1 class="text-2xl font-bold text-slate-900">Control General de Departamentos</h1>
+        <p class="text-slate-500 text-sm">Vista exclusiva del comité administrativo</p>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <p class="text-sm text-slate-600">Desde aquí puedes supervisar el padrón de departamentos conectados a Firebase y registrar pagos manuales en la pestaña "Estado de Cuenta".</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL REGISTRAR PAGO (SOLO ADMIN) -->
+  <div id="payment-modal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-slate-900">Registrar Pago de Mantenimiento</h3>
+      <form id="payment-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Departamento (Ej. Depto 101)</label>
+          <input type="text" id="pay-unit" required placeholder="Depto 101" class="w-full px-3 py-2 border rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Concepto</label>
+          <input type="text" id="pay-concept" required placeholder="Cuota Noviembre 2026" class="w-full px-3 py-2 border rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Monto ($)</label>
+          <input type="number" id="pay-amount" required value="1500" class="w-full px-3 py-2 border rounded-lg text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closePaymentModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Guardar Pago</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- LÓGICA JAVASCRIPT Y ESTADO DE LA APLICACIÓN -->
-    <script>
-        // ESTADO INICIAL DE DATOS
-        let residentes = [
-            { id: 1, casa: "Casa 01", propietario: "Carlos Mendoza", telefono: "55 4920 1122", cuota: 2500, estado: "Al Día" },
-            { id: 2, casa: "Casa 02", propietario: "María Fernanda López", telefono: "55 8832 9900", cuota: 2500, estado: "Al Día" },
-            { id: 3, casa: "Casa 03", propietario: "Alejandro Silva", telefono: "55 1122 3344", cuota: 2500, estado: "Moroso" },
-            { id: 4, casa: "Casa 04", propietario: "Sofia Ramírez", telefono: "55 7766 5544", cuota: 2500, estado: "Al Día" },
-            { id: 5, casa: "Casa 05", propietario: "Gabriel Torres", telefono: "55 9900 1122", cuota: 2500, estado: "Moroso" },
-            { id: 6, casa: "Casa 06", propietario: "Lucía Hernández", telefono: "55 3344 5566", cuota: 2500, estado: "Al Día" }
-        ];
+  <!-- FIREBASE SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        let pagos = [
-            { folio: "REC-2026-001", fecha: "2026-10-24", casa: "Casa 01", concepto: "Cuota Octubre 2026", monto: 2500, metodo: "Transferencia SPEI" },
-            { folio: "REC-2026-002", fecha: "2026-10-22", casa: "Casa 02", concepto: "Cuota Octubre 2026", monto: 2500, metodo: "Tarjeta Débito" },
-            { folio: "REC-2026-003", fecha: "2026-10-20", casa: "Casa 04", concepto: "Cuota Octubre 2026", monto: 2500, metodo: "Transferencia SPEI" },
-            { folio: "REC-2026-004", fecha: "2026-10-18", casa: "Casa 06", concepto: "Cuota Octubre 2026", monto: 2500, metodo: "Efectivo" }
-        ];
+    // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_PROYECTO.firebaseapp.com",
+      projectId: "TU_PROYECTO",
+      storageBucket: "TU_PROYECTO.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
 
-        let avisos = [
-            { id: 1, titulo: "Asamblea General de Propietarios", Categoria: "Asamblea", fecha: "2026-10-28", mensaje: "Se convoca a la reunión ordinaria este sábado a las 10:00 AM en el salón de eventos.", prioridad: "Alta" },
-            { id: 2, titulo: "Mantenimiento del Elevador B", Categoria: "Mantenimiento", fecha: "2026-10-26", mensaje: "El elevador de la torre B estará fuera de servicio temporalmente de 9:00 a 14:00 hrs por mantenimiento técnico.", prioridad: "Media" },
-            { id: 3, titulo: "Recordatorio: Horarios de Mascotas", Categoria: "Reglamento", fecha: "2026-10-15", mensaje: "Favor de mantener sus mascotas con correa en todas las áreas verdes comunitarias.", prioridad: "Baja" }
-        ];
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        let incidencias = [
-            { id: 1, titulo: "Fallo en motor de portón principal", ubicacion: "Acceso Vehicular Norte", fecha: "2026-10-24", prioridad: "Alta", estado: "En Proceso", desc: "El motor abre de forma intermitente, técnico citado para hoy por la tarde." },
-            { id: 2, titulo: "Fuga de agua en manguera de jardín", ubicacion: "Área de Juegos", fecha: "2026-10-23", prioridad: "Baja", estado: "Pendiente", desc: "Se detectó goteo constante en la conexión de riego." },
-            { id: 3, titulo: "Lámpara fundida en pasillo 3", ubicacion: "Torre A - Piso 2", fecha: "2026-10-21", prioridad: "Media", estado: "Resuelto", desc: "Se sustituyó el foco LED por uno nuevo." }
-        ];
+    let currentUserProfile = null;
 
-        let reservas = [
-            { id: 1, amenidad: "Salón de Eventos", casa: "Casa 04", fecha: "2026-11-01", horario: "16:00 - 22:00", estado: "Confirmada" },
-            { id: 2, amenidad: "Palapa con Asador", casa: "Casa 02", fecha: "2026-10-31", horario: "10:00 - 15:00", estado: "Confirmada" }
-        ];
+    // 1. MANEJO DE INICIO DE SESIÓN
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorBox = document.getElementById('login-error');
 
-        let chartInstance = null;
+      try {
+        errorBox.classList.add('hidden');
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        errorBox.classList.remove('hidden');
+      }
+    });
 
-        // INICIALIZACIÓN
-        window.onload = function() {
-            renderAll();
-            initChart();
-            populateDropdowns();
-            
-            // Establecer fecha por defecto para reservas en hoy
-            const today = new Date().toISOString().split('T')[0];
-            const fechaReservaInput = document.getElementById('reserva-fecha');
-            if (fechaReservaInput) fechaReservaInput.value = today;
-        };
+    // 2. DETECTAR ESTADO DE AUTENTICACIÓN Y CARGAR DATOS DEL DEPARTAMENTO
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Obtener perfil y departamento asignado desde Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userDocRef);
 
-        // RENDERIZADO GENERAL
-        function renderAll() {
-            renderKPIs();
-            renderDashRecentPayments();
-            renderDashAvisos();
-            renderResidentes();
-            renderFinanzas();
-            renderAvisos();
-            renderIncidencias();
-            renderReservas();
-            populateDropdowns();
+        if (userSnap.exists()) {
+          currentUserProfile = userSnap.data();
+        } else {
+          // Perfil por defecto si aún no se crea en Firestore
+          currentUserProfile = {
+            email: user.email,
+            role: user.email.startsWith('admin') ? 'admin' : 'resident',
+            unit: user.email.split('@')[0].toUpperCase(),
+            name: 'Residente'
+          };
         }
 
-        // CONTROL DE NAVEGACIÓN Y SIDEBAR
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+        setupUIForUser(currentUserProfile);
+        loadPayments(currentUserProfile);
+        loadIncidents(currentUserProfile);
+
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+      } else {
+        currentUserProfile = null;
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+      }
+    });
+
+    // 3. ADAPTAR INTERFAZ SEGÚN ROL (ADMIN VS DEPARTAMENTO)
+    function setupUIForUser(profile) {
+      document.getElementById('user-unit-badge').textContent = profile.unit;
+      document.getElementById('user-name-display').textContent = profile.name;
+      document.getElementById('user-role-display').textContent = profile.role === 'admin' ? 'Administrador' : 'Residente';
+      document.getElementById('welcome-title').textContent = `Hola, ${profile.unit}`;
+
+      if (profile.role === 'admin') {
+        document.getElementById('admin-menu').classList.remove('hidden');
+        document.getElementById('btn-new-payment').classList.remove('hidden');
+        document.getElementById('kpi-1-label').textContent = 'Recaudación Total Mes';
+        document.getElementById('payments-subtitle').textContent = 'Historial global de todos los departamentos';
+      } else {
+        document.getElementById('admin-menu').classList.add('hidden');
+        document.getElementById('btn-new-payment').classList.add('hidden');
+        document.getElementById('kpi-1-label').textContent = 'Saldo Pendiente';
+        document.getElementById('payments-subtitle').textContent = `Movimientos exclusivos de ${profile.unit}`;
+      }
+    }
+
+    // 4. CARGAR PAGOS FILTRADOS POR DEPARTAMENTO (O TODOS SI ES ADMIN)
+    function loadPayments(profile) {
+      const paymentsRef = collection(db, "payments");
+      const q = profile.role === 'admin' 
+        ? query(paymentsRef) 
+        : query(paymentsRef, where("unit", "==", profile.unit));
+
+      onSnapshot(q, (snapshot) => {
+        const tbody = document.getElementById('payments-table-body');
+        tbody.innerHTML = '';
+        let totalAmount = 0;
+
+        if (snapshot.empty) {
+          tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay pagos registrados aún.</td></tr>`;
         }
 
-        function switchTab(tabId) {
-            // Ocultar todas las pestañas
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            
-            // Mostrar pestaña seleccionada
-            const target = document.getElementById(`tab-${tabId}`);
-            if (target) target.classList.remove('hidden');
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          totalAmount += Number(data.amount || 0);
+          tbody.innerHTML += `
+            <tr>
+              <td class="p-4 text-slate-600">${data.date || 'Reciente'}</td>
+              <td class="p-4 font-medium text-slate-900">${data.unit}</td>
+              <td class="p-4 text-slate-600">${data.concept}</td>
+              <td class="p-4 font-semibold text-slate-900">$${Number(data.amount).toLocaleString()}</td>
+              <td class="p-4"><span class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-medium">Pagado</span></td>
+            </tr>
+          `;
+        });
 
-            // Actualizar estilo en sidebar
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('bg-brand-600', 'text-white');
-                item.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
-            });
-
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if (activeNav) {
-                activeNav.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
-                activeNav.classList.add('bg-brand-600', 'text-white');
-            }
-
-            // Cambiar título de página
-            const titleMap = {
-                'dashboard': 'Dashboard General',
-                'residentes': 'Directorio de Residentes y Propiedades',
-                'finanzas': 'Finanzas y Control de Pagos',
-                'comunicados': 'Avisos y Comunicados',
-                'incidencias': 'Reportes y Mantenimiento',
-                'reservas': 'Reservación de Amenidades'
-            };
-            document.getElementById('page-title').textContent = titleMap[tabId] || 'Dashboard';
-
-            // Cerrar sidebar en dispositivos móviles
-            if (window.innerWidth < 768) {
-                const sidebar = document.getElementById('sidebar');
-                if (!sidebar.classList.contains('-translate-x-full')) {
-                    toggleSidebar();
-                }
-            }
+        if (profile.role === 'admin') {
+          document.getElementById('kpi-1-value').textContent = `$${totalAmount.toLocaleString()}`;
         }
+      });
+    }
 
-        // RENDER DE KPIs
-        function renderKPIs() {
-            const totalIngresos = pagos.reduce((sum, p) => sum + p.monto, 0);
-            const morosos = residentes.filter(r => r.estado === 'Moroso').length;
-            const totalCasas = residentes.length;
-            const morosidadPct = totalCasas > 0 ? ((morosos / totalCasas) * 100).toFixed(1) : 0;
-            const incPendientes = incidencias.filter(i => i.estado !== 'Resuelto').length;
+    // 5. REGISTRAR PAGO (ADMIN)
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (currentUserProfile?.role !== 'admin') return;
 
-            document.getElementById('kpi-ingresos').textContent = `$${(totalIngresos + 138500).toLocaleString('es-MX')} MXN`;
-            document.getElementById('kpi-morosidad').textContent = `${morosidadPct}%`;
-            document.getElementById('kpi-incidencias').textContent = `${incPendientes} Pendientes`;
-        }
+      await addDoc(collection(db, "payments"), {
+        unit: document.getElementById('pay-unit').value.trim(),
+        concept: document.getElementById('pay-concept').value.trim(),
+        amount: Number(document.getElementById('pay-amount').value),
+        date: new Date().toLocaleDateString('es-MX')
+      });
 
-        // POBLAR DROPDOWNS DINÁMICOS
-        function populateDropdowns() {
-            const casas = residentes.map(r => r.casa);
-            
-            const pagoCasaSelect = document.getElementById('pago-casa');
-            const reservaCasaSelect = document.getElementById('reserva-casa');
+      closePaymentModal();
+      e.target.reset();
+    });
 
-            if (pagoCasaSelect) {
-                pagoCasaSelect.innerHTML = casas.map(c => `<option value="${c}">${c}</option>`).join('');
-            }
-            if (reservaCasaSelect) {
-                reservaCasaSelect.innerHTML = casas.map(c => `<option value="${c}">${c}</option>`).join('');
-            }
-        }
+    // 6. REPORTAR Y LISTAR INCIDENCIAS POR DEPARTAMENTO
+    document.getElementById('incident-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await addDoc(collection(db, "incidents"), {
+        title: document.getElementById('inc-title').value.trim(),
+        category: document.getElementById('inc-category').value,
+        unit: currentUserProfile.unit,
+        status: 'Pendiente',
+        date: new Date().toLocaleDateString('es-MX')
+      });
+      e.target.reset();
+    });
 
-        // TABLA PAGOS EN DASHBOARD
-        function renderDashRecentPayments() {
-            const tbody = document.getElementById('dash-recent-payments');
-            tbody.innerHTML = pagos.slice(0, 4).map(p => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-3 font-semibold text-slate-800">${p.folio}</td>
-                    <td class="px-6 py-3">${p.casa}</td>
-                    <td class="px-6 py-3">${getPropietarioName(p.casa)}</td>
-                    <td class="px-6 py-3 font-semibold text-emerald-600">$${p.monto.toLocaleString('es-MX')} MXN</td>
-                    <td class="px-6 py-3 text-slate-500">${p.metodo}</td>
-                    <td class="px-6 py-3">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                            Completado
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
-        }
+    function loadIncidents(profile) {
+      const incRef = collection(db, "incidents");
+      const q = profile.role === 'admin'
+        ? query(incRef)
+        : query(incRef, where("unit", "==", profile.unit));
 
-        function getPropietarioName(casa) {
-            const res = residentes.find(r => r.casa === casa);
-            return res ? res.propietario : 'Propietario';
-        }
+      onSnapshot(q, (snapshot) => {
+        const container = document.getElementById('incidents-list');
+        container.innerHTML = '';
+        document.getElementById('kpi-incidents-count').textContent = snapshot.size;
 
-        // AVISOS EN DASHBOARD
-        function renderDashAvisos() {
-            const container = document.getElementById('dash-avisos-list');
-            container.innerHTML = avisos.slice(0, 3).map(a => `
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start space-x-3">
-                    <div class="p-2 rounded-lg ${a.prioridad === 'Alta' ? 'bg-red-100 text-red-600' : 'bg-brand-100 text-brand-600'} flex-shrink-0">
-                        <i class="fa-solid fa-bell"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-800">${a.titulo}</h4>
-                        <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">${a.mensaje}</p>
-                        <span class="text-[10px] text-slate-400 font-medium">${a.fecha}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          container.innerHTML += `
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex justify-between items-start">
+              <div>
+                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${data.unit} • ${data.category}</span>
+                <h4 class="font-bold text-slate-900 mt-2">${data.title}</h4>
+                <p class="text-xs text-slate-400 mt-1">Reportado el ${data.date}</p>
+              </div>
+              <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">${data.status}</span>
+            </div>
+          `;
+        });
+      });
+    }
 
-        // MÓDULO RESIDENTES Y PROPIEDADES
-        function renderResidentes() {
-            const tbody = document.getElementById('residentes-table-body');
-            const searchVal = document.getElementById('search-residentes')?.value.toLowerCase() || '';
-            const filterEstado = document.getElementById('filter-estado-pago')?.value || 'todos';
-
-            const filtered = residentes.filter(r => {
-                const matchesSearch = r.casa.toLowerCase().includes(searchVal) || 
-                                      r.propietario.toLowerCase().includes(searchVal) ||
-                                      r.telefono.includes(searchVal);
-                const matchesEstado = filterEstado === 'todos' || r.estado === filterEstado;
-                return matchesSearch && matchesEstado;
-            });
-
-            tbody.innerHTML = filtered.map(r => `
-                <tr class="hover:bg-slate-50/80 transition">
-                    <td class="px-6 py-4 font-bold text-slate-800">${r.casa}</td>
-                    <td class="px-6 py-4 font-medium text-slate-700">${r.propietario}</td>
-                    <td class="px-6 py-4 text-slate-500"><i class="fa-solid fa-phone text-xs mr-1"></i>${r.telefono}</td>
-                    <td class="px-6 py-4 font-semibold text-slate-700">$${r.cuota.toLocaleString('es-MX')} MXN</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${r.estado === 'Al Día' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
-                            ${r.estado}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="toggleEstadoResidente(${r.id})" title="Cambiar estado de pago" class="text-slate-400 hover:text-brand-600 p-1">
-                            <i class="fa-solid fa-rotate"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function filterResidentes() {
-            renderResidentes();
-        }
-
-        function toggleEstadoResidente(id) {
-            const res = residentes.find(r => r.id === id);
-            if (res) {
-                res.estado = res.estado === 'Al Día' ? 'Moroso' : 'Al Día';
-                renderAll();
-                showToast(`Estado de ${res.casa} actualizado a ${res.estado}`, 'info');
-            }
-        }
-
-        // MÓDULO FINANZAS
-        function renderFinanzas() {
-            const tbody = document.getElementById('finanzas-table-body');
-            const searchVal = document.getElementById('search-finanzas')?.value.toLowerCase() || '';
-
-            const filtered = pagos.filter(p => p.folio.toLowerCase().includes(searchVal) || p.casa.toLowerCase().includes(searchVal));
-
-            tbody.innerHTML = filtered.map(p => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-3 font-bold text-slate-800">${p.folio}</td>
-                    <td class="px-6 py-3 text-slate-500">${p.fecha}</td>
-                    <td class="px-6 py-3 font-semibold text-slate-700">${p.casa}</td>
-                    <td class="px-6 py-3 text-slate-600">${p.concepto}</td>
-                    <td class="px-6 py-3 font-bold text-emerald-600">$${p.monto.toLocaleString('es-MX')} MXN</td>
-                    <td class="px-6 py-3 text-slate-500">${p.metodo}</td>
-                    <td class="px-6 py-3 text-center">
-                        <button onclick="verRecibo('${p.folio}')" class="px-2.5 py-1 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 text-slate-600 rounded-lg text-xs font-semibold transition">
-                            <i class="fa-regular fa-file-lines mr-1"></i>Ver
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function filterFinanzas() {
-            renderFinanzas();
-        }
-
-        function verRecibo(folio) {
-            const p = pagos.find(x => x.folio === folio);
-            if (!p) return;
-
-            const container = document.getElementById('recibo-details');
-            container.innerHTML = `
-                <div class="flex justify-between border-b pb-1">
-                    <span class="text-slate-400">Folio:</span>
-                    <span class="font-bold text-slate-800">${p.folio}</span>
-                </div>
-                <div class="flex justify-between border-b pb-1">
-                    <span class="text-slate-400">Fecha:</span>
-                    <span class="text-slate-700">${p.fecha}</span>
-                </div>
-                <div class="flex justify-between border-b pb-1">
-                    <span class="text-slate-400">Propiedad:</span>
-                    <span class="font-bold text-slate-800">${p.casa}</span>
-                </div>
-                <div class="flex justify-between border-b pb-1">
-                    <span class="text-slate-400">Propietario:</span>
-                    <span class="text-slate-700">${getPropietarioName(p.casa)}</span>
-                </div>
-                <div class="flex justify-between border-b pb-1">
-                    <span class="text-slate-400">Concepto:</span>
-                    <span class="text-slate-700">${p.concepto}</span>
-                </div>
-                <div class="flex justify-between border-b pb-1">
-                    <span class="text-slate-400">Método de Pago:</span>
-                    <span class="text-slate-700">${p.metodo}</span>
-                </div>
-                <div class="flex justify-between text-sm pt-2">
-                    <span class="font-bold text-slate-800">Total Pagado:</span>
-                    <span class="font-bold text-emerald-600">$${p.monto.toLocaleString('es-MX')} MXN</span>
-                </div>
-            `;
-            openModal('modal-recibo-view');
-        }
-
-        // MÓDULO COMUNICADOS
-        function renderAvisos() {
-            const container = document.getElementById('comunicados-grid');
-            container.innerHTML = avisos.map(a => `
-                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition">
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                a.prioridad === 'Alta' ? 'bg-red-100 text-red-700' :
-                                a.prioridad === 'Media' ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'
-                            }">${a.Categoria}</span>
-                            <span class="text-xs text-slate-400 font-medium">${a.fecha}</span>
-                        </div>
-                        <h3 class="font-bold text-slate-800 text-base mb-2">${a.titulo}</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">${a.mensaje}</p>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                        <span><i class="fa-solid fa-user-shield mr-1"></i>Administración</span>
-                        <button onclick="eliminarAviso(${a.id})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-regular fa-trash-can"></i></button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function eliminarAviso(id) {
-            avisos = avisos.filter(a => a.id !== id);
-            renderAll();
-            showToast('Aviso eliminado correctamente', 'info');
-        }
-
-        // MÓDULO INCIDENCIAS
-        function renderIncidencias() {
-            const container = document.getElementById('incidencias-cards-container');
-            container.innerHTML = incidencias.map(inc => `
-                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                inc.estado === 'Pendiente' ? 'bg-amber-100 text-amber-700' :
-                                inc.estado === 'En Proceso' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
-                            }">${inc.estado}</span>
-                            <span class="text-xs font-semibold ${inc.prioridad === 'Alta' ? 'text-red-500' : 'text-slate-400'}">
-                                Prioridad ${inc.prioridad}
-                            </span>
-                        </div>
-                        <h3 class="font-bold text-slate-800 text-sm mb-1">${inc.titulo}</h3>
-                        <p class="text-xs text-slate-500 mb-2"><i class="fa-solid fa-location-dot mr-1"></i>${inc.ubicacion}</p>
-                        <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 mb-3">${inc.desc}</p>
-                    </div>
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <span class="text-[11px] text-slate-400">${inc.fecha}</span>
-                        <div class="flex space-x-1">
-                            ${inc.estado !== 'Resuelto' ? `
-                                <button onclick="cambiarEstadoIncidencia(${inc.id}, 'Resuelto')" class="px-2 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition">
-                                    Marcar Resuelto
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function cambiarEstadoIncidencia(id, nuevoEstado) {
-            const inc = incidencias.find(i => i.id === id);
-            if (inc) {
-                inc.estado = nuevoEstado;
-                renderAll();
-                showToast(`Incidencia marcada como ${nuevoEstado}`, 'success');
-            }
-        }
-
-        // MÓDULO RESERVAS
-        function renderReservas() {
-            const container = document.getElementById('reservas-list-container');
-            if (reservas.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 italic">No hay reservaciones activas.</p>`;
-                return;
-            }
-
-            container.innerHTML = reservas.map(r => `
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center font-bold">
-                            <i class="fa-regular fa-calendar-check text-lg"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm">${r.amenidad}</h4>
-                            <p class="text-xs text-slate-500">${r.casa} (${getPropietarioName(r.casa)})</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs font-bold text-slate-700">${r.fecha}</p>
-                        <p class="text-xs text-slate-400">${r.horario}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // MANEJADORES DE FORMULARIOS DE CREACIÓN (ACCIONES DINÁMICAS)
-        function handleSavePago(e) {
-            e.preventDefault();
-            const casa = document.getElementById('pago-casa').value;
-            const concepto = document.getElementById('pago-concepto').value;
-            const monto = parseFloat(document.getElementById('pago-monto').value);
-            const metodo = document.getElementById('pago-metodo').value;
-
-            const newPago = {
-                folio: `REC-2026-00${pagos.length + 1}`,
-                fecha: new Date().toISOString().split('T')[0],
-                casa: casa,
-                concepto: concepto,
-                monto: monto,
-                metodo: metodo
-            };
-
-            pagos.unshift(newPago);
-
-            // Actualizar estado del residente a "Al Día" si estaba moroso
-            const res = residentes.find(r => r.casa === casa);
-            if (res) res.estado = "Al Día";
-
-            closeModal('modal-pago');
-            renderAll();
-            showToast('Pago registrado correctamente', 'success');
-        }
-
-        function handleSaveIncidencia(e) {
-            e.preventDefault();
-            const titulo = document.getElementById('inc-titulo').value;
-            const ubicacion = document.getElementById('inc-ubicacion').value;
-            const prioridad = document.getElementById('inc-prioridad').value;
-            const desc = document.getElementById('inc-desc').value;
-
-            const newInc = {
-                id: Date.now(),
-                titulo: titulo,
-                ubicacion: ubicacion,
-                fecha: new Date().toISOString().split('T')[0],
-                prioridad: prioridad,
-                estado: "Pendiente",
-                desc: desc
-            };
-
-            incidencias.unshift(newInc);
-            closeModal('modal-incidencia');
-            renderAll();
-            showToast('Incidencia reportada con éxito', 'success');
-        }
-
-        function handleSaveAviso(e) {
-            e.preventDefault();
-            const titulo = document.getElementById('aviso-titulo').value;
-            const Categoria = document.getElementById('aviso-categoria').value;
-            const mensaje = document.getElementById('aviso-contenido').value;
-
-            const newAviso = {
-                id: Date.now(),
-                titulo: titulo,
-                Categoria: Categoria,
-                fecha: new Date().toISOString().split('T')[0],
-                mensaje: mensaje,
-                prioridad: "Media"
-            };
-
-            avisos.unshift(newAviso);
-            closeModal('modal-aviso');
-            renderAll();
-            showToast('Aviso publicado para los vecinos', 'success');
-        }
-
-        function handleSaveReserva(e) {
-            e.preventDefault();
-            const amenidad = document.getElementById('reserva-amenidad').value;
-            const casa = document.getElementById('reserva-casa').value;
-            const fecha = document.getElementById('reserva-fecha').value;
-            const horario = document.getElementById('reserva-horario').value;
-
-            const newRes = {
-                id: Date.now(),
-                amenidad: amenidad,
-                casa: casa,
-                fecha: fecha,
-                horario: horario,
-                estado: "Confirmada"
-            };
-
-            reservas.unshift(newRes);
-            closeModal('modal-reserva');
-            renderAll();
-            showToast('Reserva confirmada exitosamente', 'success');
-        }
-
-        function handleSaveResidente(e) {
-            e.preventDefault();
-            const casa = document.getElementById('res-casa').value;
-            const cuota = parseFloat(document.getElementById('res-cuota').value);
-            const nombre = document.getElementById('res-nombre').value;
-            const telefono = document.getElementById('res-telefono').value;
-            const estado = document.getElementById('res-estado').value;
-
-            const newResidente = {
-                id: Date.now(),
-                casa: casa,
-                propietario: nombre,
-                telefono: telefono,
-                cuota: cuota,
-                estado: estado
-            };
-
-            residentes.push(newResidente);
-            closeModal('modal-residente');
-            renderAll();
-            showToast('Casa y propietario registrados', 'success');
-        }
-
-        // CONTROL DE MODALES
-        function openModal(id) {
-            document.getElementById(id)?.classList.remove('hidden');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id)?.classList.add('hidden');
-        }
-
-        // NOTIFICACIONES TOAST
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800';
-            const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
-
-            toast.className = `${bgColor} text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
-            toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // GRÁFICO CHART.JS
-        function initChart() {
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre'],
-                    datasets: [
-                        {
-                            label: 'Ingresos ($ MXN)',
-                            data: [120000, 125000, 130000, 128000, 140000, 148500],
-                            borderColor: '#0284c7',
-                            backgroundColor: 'rgba(2, 132, 199, 0.08)',
-                            fill: true,
-                            tension: 0.3,
-                            borderWidth: 3
-                        },
-                        {
-                            label: 'Egresos Mantenimiento ($ MXN)',
-                            data: [45000, 52000, 48000, 60000, 50000, 42000],
-                            borderColor: '#ef4444',
-                            backgroundColor: 'transparent',
-                            borderDash: [5, 5],
-                            tension: 0.3,
-                            borderWidth: 2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: { family: 'Inter', size: 11 }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            grid: { color: '#f1f5f9' },
-                            ticks: { font: { family: 'Inter', size: 10 } }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { family: 'Inter', size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+    // FUNCIONES GLOBALES DE INTERFAZ
+    window.logout = () => signOut(auth);
+    window.openPaymentModal = () => document.getElementById('payment-modal').classList.remove('hidden');
+    window.closePaymentModal = () => document.getElementById('payment-modal').classList.add('hidden');
+    window.showSection = (sectionId) => {
+      document.querySelectorAll('.app-section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
+    };
+  </script>
 </body>
 </html>
